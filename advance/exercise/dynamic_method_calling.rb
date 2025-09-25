@@ -9,26 +9,33 @@ module TakeInputs
     input('Enter string: ')
   end
 
-  def display_defined_methods(class_name)
-    print 'List of methods defined: '
+  def choose_method(class_name)
+    puts "List of methods defined:"
     p class_name.instance_methods(false)
-  end
+    method_name = input('Choose a method: ')
 
-  def choose_method
-    input('Choose a method: ')
+    unless class_name.instance_methods.include?(method_name.to_sym)
+      raise ArgumentError, 'Invalid method chosen'
+    end
+
+    method_name
   end
 
   def input_complete_method(obj)
-    display_defined_methods(obj.class)
-    method_name = choose_method
-    args = []
+    method_name = choose_method(obj.class)
     method_to_call = obj.method(method_name)
-    args = input_args if method_to_call.arity != 0
+    args = []
+
+    if method_to_call.arity != 0
+      args = input_args(method_to_call)
+    end
+
     [method_name, args]
   end
 
-  def input_args
-    input('Enter arguments: ').split
+  def input_args(method)
+    args_input = input("Enter arguments #{method.parameters}: ")
+    args_input.split
   end
 end
 
@@ -44,7 +51,7 @@ class MyString < String
   end
 
   def exclude?(text)
-    !include?text
+    !include?(text)
   end
 
   def join_with_star
@@ -53,7 +60,7 @@ class MyString < String
 
   def repeat(times = 2)
     times = Integer(times) rescue (raise ArgumentError, 'Enter a valid integer')
-    self * times.to_i
+    self * times
   end
 
   def surround(prefix, suffix = "!")
@@ -61,14 +68,14 @@ class MyString < String
   end
 end
 
-str = input_string
-obj = MyString.new(str)
-
-method_name, args = input_complete_method(obj)
-
+# main
 begin
+  str = input_string
+  obj = MyString.new(str)
+
+  method_name, args = input_complete_method(obj)
   p obj.send(method_name, *args)
+
 rescue ArgumentError, NoMethodError => e
   puts "#{e.class}: #{e.message}"
 end
-
