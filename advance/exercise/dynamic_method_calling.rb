@@ -1,4 +1,6 @@
-# methods to take input
+# frozen_string_literal: true
+
+# methods to take inputs
 module TakeInputs
   def input(msg)
     print msg
@@ -10,13 +12,11 @@ module TakeInputs
   end
 
   def choose_method(class_name)
-    puts "List of methods defined:"
+    puts 'List of methods defined:'
     p class_name.instance_methods(false)
     method_name = input('Choose a method: ')
 
-    unless class_name.instance_methods.include?(method_name.to_sym)
-      raise ArgumentError, 'Invalid method chosen'
-    end
+    raise ArgumentError, 'Invalid method chosen' unless class_name.instance_methods.include?(method_name.to_sym)
 
     method_name
   end
@@ -26,16 +26,23 @@ module TakeInputs
     method_to_call = obj.method(method_name)
     args = []
 
-    if method_to_call.arity != 0
-      args = input_args(method_to_call)
-    end
+    args = input_args(method_to_call) if method_to_call.arity != 0
 
     [method_name, args]
   end
 
   def input_args(method)
-    args_input = input("Enter arguments #{method.parameters}: ")
-    args_input.split
+    params = method.parameters
+
+    puts "This method requires #{params.size} argument(s):"
+    args = []
+
+    params.each do |param|
+      value = input("Enter value for '#{param[1]}' (#{param[0] == :req ? 'required' : param[0] == :opt ? 'optional' : 'nil'}): ")
+      args << value
+    end
+
+    args
   end
 end
 
@@ -63,7 +70,7 @@ class MyString < String
     self * times
   end
 
-  def surround(prefix, suffix = "!")
+  def surround(prefix, suffix = '!')
     "#{prefix}#{self}#{suffix}"
   end
 end
@@ -75,7 +82,6 @@ begin
 
   method_name, args = input_complete_method(obj)
   p obj.send(method_name, *args)
-
 rescue ArgumentError, NoMethodError => e
   puts "#{e.class}: #{e.message}"
 end
