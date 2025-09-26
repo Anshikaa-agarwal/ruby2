@@ -4,9 +4,9 @@
 class REPL
   attr_reader :count, :current_binding
 
-  def initialize
+  def initialize(b)
     @count = 1
-    @current_binding = binding
+    @current_binding = b
     @code = ''
   end
 
@@ -17,7 +17,7 @@ class REPL
   end
 
   def input
-    print "irb: #{count}> "
+    print "#{current_binding.receiver}: #{count}> "
     gets.chomp
   end
   
@@ -59,6 +59,6 @@ class REPL
   end
 end
 
-r1 = REPL.new
+r1 = REPL.new(binding)
 puts r1.instructions
-r1.start
+r1.start 
