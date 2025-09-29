@@ -1,7 +1,21 @@
 # frozen_string_literal: true
 
-# module to take input
+# custom error class for constant validation
+class ConstantError < StandardError
+  def initialize(msg = 'Input must be a constant')
+    super(msg)
+  end
+end
+
+# custom error class for method name validation
+class MethodNameError < StandardError
+  def initialize(msg = 'Method name must start with lowercase')
+    super(msg)
+  end
+end
+
 module Inputs
+  UPPERCASE_LETTER = /[A-Z]/.freeze
   def input(msg)
     print msg
     gets.chomp
@@ -9,14 +23,14 @@ module Inputs
 
   def input_class_name
     class_name = input('Please enter the class name: ')
-    raise ArgumentError, 'class name must start with uppercase' unless class_name[0] =~ /[A-Z]/
+    raise ConstantError unless class_name[0] =~ UPPERCASE_LETTER
 
     class_name
   end
 
   def input_method_name
     method_name = input('Please enter the method name: ')
-    raise ArgumentError, 'method name must not start with uppercase' if method_name[0] =~ /[A-Z]/
+    raise MethodNameError if method_name[0] =~ UPPERCASE_LETTER
 
     method_name
   end
@@ -26,22 +40,37 @@ module Inputs
   end
 end
 
-# included module input
-class Object
-  include Inputs
-end
-
 # class to generate class dynamically
 class DynamicClass
+  include Inputs
   attr_reader :my_class
 
-  def initialize(class_name)
+  def initialize
+    class_name = take_class_name
     @my_class = Object.const_set(class_name, Class.new)
+  end
+
+  def take_class_name
+    input_class_name
+  rescue ConstantError => e
+    puts "#{e.message} (#{e.class})"
+    retry
+  end
+
+  def take_method_name
+    input_method_name
+  rescue MethodNameError => e
+    puts "#{e.message} (#{e.class})"
+    retry
+  end
+
+  def take_method_body
+    input_method_code
   end
 
   def def_method(method_name, method_body)
     @my_class.define_method(method_name) do
-      instance_eval(method_body, 'dynamic_class.rb', 44)
+      instance_eval(method_body)
     end
   end
 
@@ -52,23 +81,10 @@ class DynamicClass
   end
 end
 
-begin
-  class_name = input_class_name
-rescue ArgumentError => e
-  puts "#{e.message} (#{e.class})"
-  retry
-end
 
-begin
-  method_name = input_method_name
-rescue ArgumentError => e
-  puts "#{e.message} (#{e.class})"
-  retry
-end
-
-method_code = input_method_code
-
-my_class = DynamicClass.new(class_name)
+my_class = DynamicClass.new
+method_name = my_class.take_method_name
+method_code = my_class.take_method_body
 my_class.def_method(method_name, method_code)
 
 begin
