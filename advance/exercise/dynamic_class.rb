@@ -9,13 +9,15 @@ end
 
 # custom error class for method name validation
 class MethodNameError < StandardError
-  def initialize(msg = 'Method name must start with lowercase')
+  def initialize(msg = 'Invalid syntax for method name')
     super(msg)
   end
 end
 
+# module to take inputs
 module Inputs
   UPPERCASE_LETTER = /[A-Z]/.freeze
+  VALID_METHOD_REGEX = /^[a-z_][a-z\d_]*[?!]?$/.freeze
   def input(msg)
     print msg
     gets.chomp
@@ -23,14 +25,14 @@ module Inputs
 
   def input_class_name
     class_name = input('Please enter the class name: ')
-    raise ConstantError unless class_name[0] =~ UPPERCASE_LETTER
+    raise ConstantError, 'Class name must be constant' unless class_name[0] =~ UPPERCASE_LETTER
 
     class_name
   end
 
   def input_method_name
     method_name = input('Please enter the method name: ')
-    raise MethodNameError if method_name[0] =~ UPPERCASE_LETTER
+    raise MethodNameError unless method_name =~ VALID_METHOD_REGEX
 
     method_name
   end
@@ -68,6 +70,12 @@ class DynamicClass
     input_method_code
   end
 
+  def create_a_method
+    method_name = take_method_name
+    method_body = take_method_body
+    def_method(method_name, method_body)
+  end
+
   def def_method(method_name, method_body)
     @my_class.define_method(method_name) do
       instance_eval(method_body)
@@ -81,11 +89,8 @@ class DynamicClass
   end
 end
 
-
 my_class = DynamicClass.new
-method_name = my_class.take_method_name
-method_code = my_class.take_method_body
-my_class.def_method(method_name, method_code)
+method_name = my_class.create_a_method
 
 begin
   my_class.call(method_name)
