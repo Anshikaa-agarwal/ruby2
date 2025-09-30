@@ -25,7 +25,7 @@ module Inputs
 
   def input_class_name
     class_name = input('Please enter the class name: ')
-    raise ConstantError, 'Class name must be constant' unless class_name[0] =~ UPPERCASE_LETTER
+    raise ConstantError, 'Class name must be a constant' unless class_name[0] =~ UPPERCASE_LETTER
 
     class_name
   end
@@ -85,7 +85,7 @@ class DynamicClass
   def call(method_name)
     puts "Hello, your class #{my_class} with method #{method_name} is ready."
     puts "Calling: #{my_class}.new.#{method_name}:"
-    my_class.new.send(method_name)
+    my_class.new.public_send(method_name)
   end
 end
 
