@@ -13,3 +13,12 @@ end
 s = Series.new
 p s.fibonacci(3)
 p s.fibonacci(4)
+
+
+-> (a).class
+-> (a).class
+-> (a) {}.class
+-> (a) {a}['Hello World'].class
+-> (a)
+-> (a) {}
+-> (a) {a}['Hello World']

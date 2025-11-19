@@ -1,45 +1,58 @@
 # frozen_string_literal: true
 
+# module to set name
+module NameHelper
+  METHOD_NAME = /(?<base>.*?)(?<punct>[!?=])?$/.freeze
+  def self.method_names_set(name, suffix)
+    matched = name.match(METHOD_NAME)
+    ["#{matched[:base]}_without_#{suffix}#{matched[:punct]}", "#{matched[:base]}_with_#{suffix}#{matched[:punct]}"]
+  end
+end
+
+# module for chained aliasing
 module MyModule
-  def self.included(klass)
-    klass.extend ClassMethods
+  def self.included(base)
+    base.extend ClassMethods
   end
 
+  # module to include class methods
   module ClassMethods
-    define_method :chained_aliasing do |name, logger_method|
-      new_method = "#{name}_without_logger"
-      alias_method new_method, name
+    extend NameHelper
 
-      visibility = check_visiblity(name)
+    def chained_aliasing(name, suffix)
+      without, with = NameHelper.method_names_set(name, suffix)
 
-      define_method(name) do |*args, &blk|
-        send("#{name}_with_logger", *args, &blk)
-      end
-
-      send(visibility, name)
-      send(visibility, new_method)
+      alias_method without, name
+      define_method(name) { |*args, &blk| public_send(with, *args, &blk) }
+      set_visibility(name, with)
     end
 
-    def check_visiblity(name)
-      if private_method_defined?(name)
-        :private
-      elsif protected_method_defined?(name)
-        :protected
-      else
-        :public
+    def set_visibility(name, *args)
+      visibility = check_visibility(name)
+      args.each do |met|
+        send(visibility, met)
       end
+    end
+
+    def check_visibility(name)
+      return :private if private_method_defined?(name)
+
+      return :protected if protected_method_defined?(name)
+
+      :public
     end
   end
 end
 
+# Example usage
 class Hello
   include MyModule
 
-  private def greet
+  def greet
     puts 'hello'
   end
 
-  private def greet_with_logger
+  def greet_with_logger
     puts '--logging start'
     greet_without_logger
     puts '--logging end'
